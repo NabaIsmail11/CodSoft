@@ -1,0 +1,55 @@
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+
+data = pd.read_csv("fraudTest.csv")
+data.describe()
+data.info()
+missing_values = data.isnull().sum()
+print("Missing values in each column:")
+print(missing_values)
+
+data= data.dropna()
+
+from sklearn.preprocessing import LabelEncoder
+label_encoder = LabelEncoder()
+data['merchant'] = label_encoder.fit_transform(data['merchant'])
+data['category'] = label_encoder.fit_transform(data['category'])
+data['gender'] = label_encoder.fit_transform(data['gender'])
+data['job'] = label_encoder.fit_transform(data['job'])
+
+X = data.drop(['Unnamed: 0', 'trans_date_trans_time', 'first', 'last', 'street', 'city', 'state', 'zip', 'dob', 'trans_num', 'is_fraud'], axis=1)
+y = data['is_fraud']
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+logistic_model = LogisticRegression()
+logistic_model.fit(X_train, y_train)
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+y_pred_logistic = logistic_model.predict(X_test)
+print("Logistic Regression:")
+print(classification_report(y_test, y_pred_logistic))
+print("Accuracy:", accuracy_score(y_test, y_pred_logistic))
+forest_model = RandomForestClassifier()
+forest_model.fit(X_train, y_train)
+y_pred_forest = forest_model.predict(X_test)
+print("\nRandom Forest:")
+print(classification_report(y_test, y_pred_forest))
+print("Accuracy:", accuracy_score(y_test, y_pred_forest))
+
+import matplotlib.pyplot as plt
+accuracy_logistic = accuracy_score(y_test, y_pred_logistic)
+accuracy_forest = accuracy_score(y_test, y_pred_forest)
+
+models = ['Logistic Regression', 'Random Forest']
+accuracies = [accuracy_logistic, accuracy_forest]
+
+plt.figure(figsize=(8, 6))
+plt.bar(models, accuracies, color=['blue', 'green'])
+plt.xlabel('Model')
+plt.ylabel('Accuracy')
+plt.title('Comparison of Logistic Regression and Random Forest')
+plt.show()
